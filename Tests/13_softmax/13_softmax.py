@@ -1,5 +1,4 @@
 import torch
-import torch.nn as nn
 import numpy as np
 
 # Softmax applies the exponential function to each element, and normalizes
