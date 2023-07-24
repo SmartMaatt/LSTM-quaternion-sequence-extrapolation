@@ -7,7 +7,7 @@ import math
 class WineDataset(Dataset):
 
     def __init__(self):
-        xy = np.loadtxt(r'C:\Users\Szkolenie\Documents\GitHub\LSTM-quaternion-sequence-extrapolation\Tests\11_dataloader\wine.csv', delimiter=',', dtype=np.float32, skiprows=1)
+        xy = np.loadtxt(r'data\wine\wine.csv', delimiter=',', dtype=np.float32, skiprows=1)
         self.x = torch.from_numpy(xy[:, 1:])
         self.y = torch.from_numpy(xy[:, [0]])
         self.n_samples = xy.shape[0]
