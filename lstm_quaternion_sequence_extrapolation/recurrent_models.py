@@ -5,7 +5,7 @@ from   torch.nn                         import functional as F
 import torch.optim
 from   torch                            import autograd
 from   torch.autograd                   import Variable
-from   core_qnn.quaternion_layers       import QuaternionLinearAutograd
+from   core_qnn.quaternion_layers       import *
 
 class StackedQLSTM(nn.Module):
     def __init__(self, feat_size, hidden_size, use_cuda, n_layers, batch_first=True):
@@ -20,7 +20,7 @@ class StackedQLSTM(nn.Module):
         for layer in self.layers:
             x = layer(x)
             # Remove extra feature added by QLSTM
-            x = x[:,:,:-1]
+            #x = x[:,:,:-1]
         if self.batch_first:
             x = x.permute(1,0,2)
         return x
@@ -35,10 +35,7 @@ class QLSTM(nn.Module):
         self.input_dim=feat_size
         self.hidden_dim=hidden_size
         self.CUDA=CUDA
-
-        # +1 because feat_size = the number on the sequence, and the output one hot will also have
-        # a blank dimension so FEAT_SIZE + 1 BLANK
-        self.num_classes=feat_size + 1
+        self.num_classes=feat_size
 
         # Gates initialization
         self.wfx  = QuaternionLinearAutograd(self.input_dim, self.hidden_dim) # Forget
@@ -59,6 +56,9 @@ class QLSTM(nn.Module):
         # Optimizer
         self.adam = torch.optim.Adam(self.parameters(), lr=0.005)
 
+    def normalize_quaternions(self, q):
+        norms = torch.norm(q, dim=2, keepdim=True)
+        return q / norms
 
     def forward(self, x):
 
@@ -91,4 +91,6 @@ class QLSTM(nn.Module):
             output = self.fco(h)
             out.append(output.unsqueeze(0))
 
-        return torch.cat(out,0)
+        output = torch.cat(out,0)
+        output = self.normalize_quaternions(output)
+        return output

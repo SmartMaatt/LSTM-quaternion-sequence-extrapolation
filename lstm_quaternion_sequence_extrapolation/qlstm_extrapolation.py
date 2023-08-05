@@ -1,8 +1,9 @@
 import csv
 import torch
+import numpy as np
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader, random_split
-from exp.iclr_2019 import recurrent_models
+from recurrent_models import StackedQLSTM
 
 # Device configuration
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -61,7 +62,7 @@ class RotationDataset(Dataset):
             final_data.append(sequence)
         
         #return final_data
-        return torch.tensor(final_data)
+        return torch.tensor(final_data, dtype=torch.float32)
     
     def _prepare_labels_dataset(self, data):
         final_data = []
@@ -71,31 +72,13 @@ class RotationDataset(Dataset):
             final_data.append(sequence)
         
         #return final_data
-        return torch.tensor(final_data)
-
-class QLSTM(nn.Module):
-    def __init__(self, input_size, hidden_size, num_layers, num_classes):
-        super(QLSTM, self).__init__()
-        self.num_layers = num_layers
-        self.hidden_size = hidden_size
-        self.qlstm = recurrent_models.QLSTM(input_size, hidden_size, True) # batch_first -> (batch_size, seq, input_size)
-        self.fc = nn.Linear(hidden_size, num_classes)
-
-    def forward(self, x):
-        h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(device)
-        c0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(device)
-
-        out = self.qlstm(x)     # out: (batch_size, seq_len, hidden_size)
-        out = out[:, -1, :-1]                 # out: [Sentiment classification!]
-        out = self.fc(out)
-        return out
-
+        return torch.tensor(final_data, dtype=torch.float32)
 
 
 # ===>>> Temporary testing functions <<<===
 def predict():
-    file_path = r"./data/mockup/training_data — kopia.csv"
-    labels_path = r"./data/mockup/labels_data — kopia.csv"
+    file_path = r"./data/mockup/training_data (Test).csv"
+    labels_path = r"./data/mockup/labels_data (Test).csv"
     data = []
     with open(file_path, 'r') as file:
         reader = csv.reader(file)
@@ -128,24 +111,24 @@ def predict():
         final_labels.append(sequence)
 
     with torch.no_grad():
-        data = torch.tensor(final_data).to(device)
-        l_tensor = torch.tensor(final_labels).to(device)
+        data = torch.tensor(final_data, dtype=torch.float32).to(device)
+        l_tensor = torch.tensor(final_labels, dtype=torch.float32).to(device)
         l_tensor = l_tensor.reshape(l_tensor.shape[0], 4)
 
         output = model(data)
-        output = output[:, -1, :-1] 
+        output = output[:, -1, :] 
         output_list = output.tolist()
         # Zaokrąglenie wartości do 5 miejsc po przecinku
         rounded_list = [[round(x, 5) for x in q] for q in output_list]
         loss = criterion(output, l_tensor)
-        print(f"result: {rounded_list}, loss: {loss.item():.7f}")
+        print(f"result: {rounded_list}, expected: {l_tensor}, loss: {loss.item():.7f}")
 
 
 
 # 1. Creating dataset
 print("1. Creating dataset")
-training_path = r"./data/mockup/training_data.csv"
-labels_path = r"./data/mockup/labels_data.csv"
+training_path = r"./data/mockup/training_data (Medium).csv"
+labels_path = r"./data/mockup/labels_data (Medium).csv"
 dataset = RotationDataset(training_path, labels_path)
 
 # 2. Splitting dataset
@@ -162,13 +145,41 @@ test_loader = DataLoader(dataset=test_dataset, batch_size=batch_size)
 # 4. Creating model
 print("4. Creating model")
 #model = QLSTM(input_size, hidden_size, num_layers, num_classes).to(device)
-model = recurrent_models.QLSTM(input_size, hidden_size, True).to(device)
+model = StackedQLSTM(input_size, hidden_size, True, num_layers, True).to(device)
+
+
+class QALLoss(nn.Module):
+    def __init__(self):
+        super().__init__()
+    
+    def quaternion_conjugate(self, q):
+        w, v = q[:, 0], q[:, 1:]
+        return torch.cat((w.unsqueeze(-1), -v), dim=1)
+
+    def quaternion_multiply(self, q1, q2):
+        w1, v1 = q1[:, 0], q1[:, 1:]
+        w2, v2 = q2[:, 0], q2[:, 1:]
+
+        w = w1 * w2 - (v1 * v2).sum(dim=1)
+        v = w1.unsqueeze(-1) * v2 + w2.unsqueeze(-1) * v1 + torch.cross(v1, v2)
+
+        return torch.cat((w.unsqueeze(-1), v), dim=1)
+
+    def forward(self, output: torch.tensor, expected: torch.tensor) -> torch.tensor:
+        distance = self.quaternion_multiply(self.quaternion_conjugate(output), expected)
+        w = distance[:, 0]
+        angles_rad = 2 * torch.acos(torch.clamp(w, -1.0, 1.0))
+        angles_rad = angles_rad**2
+        return torch.mean(angles_rad)
+
 
 # 5. Loss and optimizer
 print("5. Creating criterion and optimizer")
-criterion = nn.MSELoss()
+criterion = QALLoss()
+criterion_test = QALLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 predict()
+
 
 # 6. Training loop
 print("6. Starting training loop")
@@ -181,7 +192,7 @@ for epoch in range(num_epochs):
 
         # Forward
         outputs = model(rotations)
-        outputs = outputs[:, -1, :-1] 
+        outputs = outputs[:, -1, :]
         loss = criterion(outputs, labels)
 
         # Backwards
@@ -190,12 +201,12 @@ for epoch in range(num_epochs):
         optimizer.step()
 
         if (i+1) % 10 == 0:
-            print(f'epoch {epoch+1} / {num_epochs}, step {i+1} / {n_total_steps}, loss {loss.item():.7f}')
+            print(f'epoch {epoch+1} / {num_epochs}, step {i+1} / {n_total_steps}, loss {loss.item()}')
 
 # 7. Test and evaluation
 print("7. Starting evaluation")
 with torch.no_grad():
-    test_loss = 0
+    test_loss = []
     n_samples = 0
 
     for (rotations, labels) in test_loader:
@@ -203,11 +214,13 @@ with torch.no_grad():
         labels = labels.to(device)
         labels = labels.reshape(labels.shape[0], input_size)
         output = model(rotations)
-        output = output[:, -1, :-1] 
+        output = output[:, -1, :] 
 
-        test_loss += criterion(output, labels).item()
+        test_loss.append(criterion_test(output, labels).item())
 
-    loss = test_loss / len(test_loader)
-    print(f'loss {loss:.7f}')
+    test_loss = np.array(test_loss)
+    loss_mean = np.mean(test_loss)
+    loss_std = np.std(test_loss)
+    print(f'Loss mean: {loss_mean:.7f}, loss std: {loss_std:.7f}')
 
 predict()

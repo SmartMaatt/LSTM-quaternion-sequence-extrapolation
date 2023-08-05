@@ -15,9 +15,8 @@ num_layers = 2
 hidden_size = 128
 num_classes = 4
 num_epochs = 3
-batch_size = 10
+batch_size = 100
 learning_rate = 0.001
-
 
 
 # ===>>> Classes <<<===
@@ -95,8 +94,8 @@ class LSTM(nn.Module):
 
 # ===>>> Temporary testing functions <<<===
 def predict():
-    file_path = r"./data/mockup/training_data — kopia.csv"
-    labels_path = r"./data/mockup/labels_data — kopia.csv"
+    file_path = r"./data/mockup/training_data (Test).csv"
+    labels_path = r"./data/mockup/labels_data (Test).csv"
     data = []
     with open(file_path, 'r') as file:
         reader = csv.reader(file)
