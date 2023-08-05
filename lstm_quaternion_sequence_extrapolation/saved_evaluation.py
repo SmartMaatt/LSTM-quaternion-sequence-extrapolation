@@ -14,18 +14,18 @@ print("Program started")
 # Hyper parameters
 input_size = 4          # Quaternion
 sequence_length = 100   # Frames
-batch_size = 100
+batch_size = 10
 
-show_evaluation = False
-model_path = rf"./data/models.pth"
+show_evaluation = True
+model_path = rf"./models/lstm_mse_batch10_epochs3.pth"
 
 
 # 1. Creating dataset
 print("1. Creating dataset")
-training_path = r"./data/mockup/training_data (Medium).csv"
-labels_path = r"./data/mockup/labels_data (Medium).csv"
-# training_path = r"./data/mockup/large/training_data.csv"
-# labels_path = r"./data/mockup/large/labels_data.csv"
+# training_path = r"./data/mockup/training_data (Medium).csv"
+# labels_path = r"./data/mockup/labels_data (Medium).csv"
+training_path = r"./data/mockup/large/training_data.csv"
+labels_path = r"./data/mockup/large/labels_data.csv"
 dataset = RotationDataset(training_path, labels_path, input_size, sequence_length)
 
 

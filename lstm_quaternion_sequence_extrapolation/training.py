@@ -20,22 +20,22 @@ num_layers = 2
 hidden_size = 128
 num_classes = 4
 num_epochs = 3
-batch_size = 100
+batch_size = 10
 learning_rate = 0.001
 
-is_qlstm = True
+is_qlstm = False
 is_qal_loss = False
 
 show_evaluation = False
-model_path = rf"./models/model.pth"
+model_path = rf"./models/lstm_mse_batch10_epochs3.pth"
 
 
 # 1. Creating dataset
 print("1. Creating dataset")
-training_path = r"./data/mockup/training_data (Medium).csv"
-labels_path = r"./data/mockup/labels_data (Medium).csv"
-# training_path = r"./data/mockup/large/training_data.csv"
-# labels_path = r"./data/mockup/large/labels_data.csv"
+# training_path = r"./data/mockup/training_data (Medium).csv"
+# labels_path = r"./data/mockup/labels_data (Medium).csv"
+training_path = r"./data/mockup/large/training_data.csv"
+labels_path = r"./data/mockup/large/labels_data.csv"
 dataset = RotationDataset(training_path, labels_path, input_size, sequence_length)
 
 
@@ -98,9 +98,10 @@ for epoch in range(num_epochs):
         loss.backward()
         optimizer.step()
 
-        if (i+1) % 10 == 0:
-            print(f'epoch {epoch+1} / {num_epochs}, step {i+1} / {n_total_steps}, loss {loss.item()}, time: {(time.time() - start_time):.2f}s')
+        if (i+1) % 100 == 0:
+            print(f'epoch {epoch+1} / {num_epochs}, step {i+1} / {n_total_steps}, loss {loss.item():.7f}, time: {(time.time() - start_time):.2f}s')
 print(f"Learning took {seconds_to_hms(time.time() - start_time)}")
+
 
 # 7. Test and evaluation
 print("7. Starting evaluation")
