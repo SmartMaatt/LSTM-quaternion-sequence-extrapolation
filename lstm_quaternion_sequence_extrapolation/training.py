@@ -1,3 +1,4 @@
+import sys
 import time
 import torch
 import torch.nn as nn
@@ -6,7 +7,7 @@ from torch.utils.data import DataLoader, random_split
 
 import recurrent_models as rm
 from dataset_initializer import RotationDataset
-from utilities import seconds_to_hms
+from utilities import seconds_to_hms, ModelType
 
 # Device configuration
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -23,15 +24,15 @@ num_epochs = 3
 batch_size = 10
 learning_rate = 0.001
 
-is_qlstm = False
+model_type = ModelType.LSTM
 is_qal_loss = False
 
 show_evaluation = False
-model_path = rf"./models/lstm_mse_batch10_epochs3.pth"
+model_dir = rf"./models"
 
 
 # 1. Creating dataset
-print("1. Creating dataset")
+print("\n1. Creating dataset")
 # training_path = r"./data/mockup/training_data (Medium).csv"
 # labels_path = r"./data/mockup/labels_data (Medium).csv"
 training_path = r"./data/mockup/large/training_data.csv"
@@ -40,30 +41,45 @@ dataset = RotationDataset(training_path, labels_path, input_size, sequence_lengt
 
 
 # 2. Splitting dataset
-print("2. Splitting dataset")
+print("\n2. Splitting dataset")
 training_size = int(0.8 * len(dataset))
 test_size = len(dataset) - training_size
 training_dataset, test_dataset = random_split(dataset, [training_size, test_size])
 
 
 # 3. Generating DataLoaders
-print("3. Generating DataLoaders")
+print("\n3. Generating DataLoaders")
 train_loader = DataLoader(dataset=training_dataset, batch_size=batch_size)
 test_loader = DataLoader(dataset=test_dataset, batch_size=batch_size)
 
 
 # 4. Creating model
-print("4. Creating model")
-if is_qlstm:
-    print("Model: Stacked QLSTM")
-    model = rm.StackedQLSTM(input_size, hidden_size, num_layers, batch_first=True, device=device).to(device)
-else:
-    print("Model: LSTM model")
+print("\n4. Creating model")
+if model_type == ModelType.LSTM:
+    print(f"Model: LSTM")
     model = rm.LSTM(input_size, hidden_size, num_layers, num_classes, device).to(device)
+
+elif model_type == ModelType.QLSTM:
+    print(f"Model: QLSTM")
+    model = rm.StackedQLSTM(input_size, hidden_size, num_layers, batch_first=True, device=device).to(device)
+
+elif model_type == ModelType.VectorizedQLSTM:
+    print(f"Model: Vectorized QLSTM")
+    model = rm.VectorizedStackedQLSTM(input_size, hidden_size, num_layers, batch_first=True, device=device).to(device)
+
+else:
+    print("Incorrect model type!")
+    sys.exit()
+
+print(f"Sequence length: {sequence_length}")
+print(f"Layers: {num_layers}")
+print(f"Hidden size: {hidden_size}")
+print(f"Epochs: {num_epochs}")
+print(f"Batch size: {batch_size}")
 
 
 # 5. Loss and optimizer
-print("5. Creating criterion and optimizer")
+print("\n5. Creating criterion and optimizer")
 if is_qal_loss:
     print("Training criterion: QALLoss function")
     criterion = rm.QALLoss()
@@ -76,10 +92,11 @@ criterion_eval = rm.QALLoss()
 
 print("Optimizer: Adam")
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+print(f"Learning rate: {learning_rate}")
 
 
 # 6. Training loop
-print("6. Starting training loop")
+print("\n6. Starting training loop")
 n_total_steps = len(train_loader)
 start_time = time.time()
 
@@ -100,11 +117,11 @@ for epoch in range(num_epochs):
 
         if (i+1) % 100 == 0:
             print(f'epoch {epoch+1} / {num_epochs}, step {i+1} / {n_total_steps}, loss {loss.item():.7f}, time: {(time.time() - start_time):.2f}s')
-print(f"Learning took {seconds_to_hms(time.time() - start_time)}")
+print(f"Learning took {seconds_to_hms(time.time() - start_time)}, [{time.time() - start_time}]")
 
 
 # 7. Test and evaluation
-print("7. Starting evaluation")
+print("\n7. Starting evaluation")
 with torch.no_grad():
     test_loss = []
     n_samples = 0
@@ -127,7 +144,6 @@ with torch.no_grad():
                 print(f"output: {output[i]}, expected: {labels[i]}")
             print(f"loss: {test_loss[n_samples - 1]}")
 
-
     test_loss = np.array(test_loss)
     loss_mean = np.mean(test_loss)
     loss_std = np.std(test_loss)
@@ -135,7 +151,24 @@ with torch.no_grad():
 
 
 # 8. Saving model
-print("8. Saving model")
+print("\n8. Saving model")
+
+# Configure file name
+model_name = ""
+if model_type == ModelType.LSTM:
+    model_name = "LSTM"
+elif model_type == ModelType.QLSTM:
+    model_name = "QLSTM"
+elif model_type == ModelType.VectorizedQLSTM:
+    model_name = "VectorizedQLSTM"
+
+loss_name = ""
+if is_qal_loss:
+    loss_name = "qal"
+else:
+    loss_name = "mse"
+
+model_path = rf"{model_dir}/{model_name}_{loss_name}_batch{batch_size}_epochs{num_epochs}.pth"
 print(f"Path: {model_path}")
 
 torch.save(model, model_path)

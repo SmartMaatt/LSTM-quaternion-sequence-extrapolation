@@ -22,10 +22,10 @@ model_path = rf"./models/lstm_mse_batch10_epochs3.pth"
 
 # 1. Creating dataset
 print("1. Creating dataset")
-# training_path = r"./data/mockup/training_data (Medium).csv"
-# labels_path = r"./data/mockup/labels_data (Medium).csv"
-training_path = r"./data/mockup/large/training_data.csv"
-labels_path = r"./data/mockup/large/labels_data.csv"
+training_path = r"./data/mockup/training_data (Medium).csv"
+labels_path = r"./data/mockup/labels_data (Medium).csv"
+# training_path = r"./data/mockup/large/training_data.csv"
+# labels_path = r"./data/mockup/large/labels_data.csv"
 dataset = RotationDataset(training_path, labels_path, input_size, sequence_length)
 
 

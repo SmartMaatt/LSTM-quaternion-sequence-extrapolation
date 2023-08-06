@@ -5,7 +5,6 @@ from torch.autograd                     import Variable
 from core_qnn.quaternion_layers         import *
 from utilities                          import normalize_quaternions
 
-
 class QALLoss(nn.Module):
     def __init__(self):
         super().__init__()
@@ -29,6 +28,81 @@ class QALLoss(nn.Module):
         angles_rad = 2 * torch.acos(torch.clamp(w, -1.0, 1.0))
         angles_rad = angles_rad**2
         return torch.mean(angles_rad)
+
+
+class VectorizedStackedQLSTM(nn.Module):
+    def __init__(self, feat_size, hidden_size, n_layers, batch_first, device):
+        super(VectorizedStackedQLSTM, self).__init__()
+        
+        self.batch_first =  batch_first
+        self.layers =       nn.ModuleList([VectorizedQLSTM(feat_size, hidden_size, device) for _ in range(n_layers)])
+
+    def forward(self, x):
+        # VectorizedQLSTM takes inputs of shape (batch_size, seq_len, feat_size)
+        if not self.batch_first:
+            x = x.permute(1,0,2)
+
+        for layer in self.layers:
+            x = layer(x)
+
+        if not self.batch_first:
+            x = x.permute(1,0,2)
+        
+        # Sentiment classification!
+        x = x[:, -1, :]
+        return x
+
+
+class VectorizedQLSTM(nn.Module):
+    def __init__(self, feat_size, hidden_size, device):
+        super(VectorizedQLSTM, self).__init__()
+
+        # Reading options:
+        self.act =          nn.Tanh()
+        self.act_gate =     nn.Sigmoid()
+        self.input_dim =    feat_size
+        self.hidden_dim =   hidden_size
+        self.device =       device
+        self.num_classes =  feat_size
+
+        self.W = QuaternionLinearAutograd(self.input_dim, 4 * self.hidden_dim)
+        self.U = QuaternionLinearAutograd(self.hidden_dim, 4 * self.hidden_dim, bias=False)
+        
+        # Output layer initialization
+        self.fco = nn.Linear(self.hidden_dim, self.num_classes)
+
+    def forward(self, x):
+        batch_size, seq_size, _ = x.size()
+        hidden_size = self.hidden_dim
+
+        (h_t, c_t) = (torch.zeros(batch_size, hidden_size).to(self.device), torch.zeros(batch_size, hidden_size).to(self.device))
+        out = []
+
+        for t in range(seq_size):
+            x_t = x[:, t, :]
+
+            # Feed-forward affine transformations (done in parallel for all gates)
+            gates = self.W(x_t) + self.U(h_t)
+
+            # Splitting the combined gates for each gate type
+            i_t, f_t, g_t, o_t = (
+                self.act_gate(gates[:, :hidden_size]),                  # input
+                self.act_gate(gates[:, hidden_size:hidden_size*2]),     # forget
+                self.act(gates[:, hidden_size*2:hidden_size*3]),        # cell
+                self.act_gate(gates[:, hidden_size*3:]),                # output
+            )
+
+            c_t = f_t * c_t + i_t * g_t
+            h_t = o_t * self.act(c_t)
+
+            output = self.fco(h_t)
+            out.append(output.unsqueeze(0))
+
+        output = torch.cat(out, dim=0)
+        # reshape from shape (sequence, batch, feature) to (batch, sequence, feature)
+        output = output.transpose(0, 1).contiguous()
+        output = normalize_quaternions(output, dim=2)
+        return output
 
 
 class StackedQLSTM(nn.Module):
