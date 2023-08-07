@@ -25,7 +25,10 @@ class QALLoss(nn.Module):
     def forward(self, output: torch.tensor, expected: torch.tensor) -> torch.tensor:
         distance = self.quaternion_multiply(self.quaternion_conjugate(output), expected)
         w = distance[:, 0]
-        angles_rad = 2 * torch.acos(torch.clamp(w, -1.0, 1.0))
+        w.requires_grad_(True)
+
+        epsilon = 1e-4
+        angles_rad = 2 * torch.acos(torch.clamp(w, -1.0 + epsilon, 1.0 - epsilon))
         angles_rad = angles_rad**2
         return torch.mean(angles_rad)
 

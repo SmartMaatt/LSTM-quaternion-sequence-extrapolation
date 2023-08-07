@@ -25,7 +25,7 @@ batch_size = 10
 learning_rate = 0.001
 
 model_type = ModelType.LSTM
-is_qal_loss = False
+is_qal_loss = True
 
 show_evaluation = False
 model_dir = rf"./models"
@@ -33,10 +33,10 @@ model_dir = rf"./models"
 
 # 1. Creating dataset
 print("\n1. Creating dataset")
-# training_path = r"./data/mockup/training_data (Medium).csv"
-# labels_path = r"./data/mockup/labels_data (Medium).csv"
-training_path = r"./data/mockup/large/training_data.csv"
-labels_path = r"./data/mockup/large/labels_data.csv"
+training_path = r"./data/mockup/training_data (Medium).csv"
+labels_path = r"./data/mockup/labels_data (Medium).csv"
+# training_path = r"./data/mockup/large/training_data.csv"
+# labels_path = r"./data/mockup/large/labels_data.csv"
 dataset = RotationDataset(training_path, labels_path, input_size, sequence_length)
 
 
@@ -48,13 +48,13 @@ training_dataset, test_dataset = random_split(dataset, [training_size, test_size
 
 
 # 3. Generating DataLoaders
-print("\n3. Generating DataLoaders")
+print("3. Generating DataLoaders")
 train_loader = DataLoader(dataset=training_dataset, batch_size=batch_size)
 test_loader = DataLoader(dataset=test_dataset, batch_size=batch_size)
 
 
 # 4. Creating model
-print("\n4. Creating model")
+print("4. Creating model")
 if model_type == ModelType.LSTM:
     print(f"Model: LSTM")
     model = rm.LSTM(input_size, hidden_size, num_layers, num_classes, device).to(device)
@@ -88,7 +88,7 @@ else:
     criterion = nn.MSELoss()
 
 print("Evaluation criterion: QALLoss function")
-criterion_eval = rm.QALLoss()
+criterion_eval = nn.MSELoss()
 
 print("Optimizer: Adam")
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
@@ -100,6 +100,7 @@ print("\n6. Starting training loop")
 n_total_steps = len(train_loader)
 start_time = time.time()
 
+model.train()
 for epoch in range(num_epochs):
     for i, (rotations, labels) in enumerate(train_loader):
         rotations = rotations.to(device)
@@ -109,8 +110,8 @@ for epoch in range(num_epochs):
         # Forward
         outputs = model(rotations)
         loss = criterion(outputs, labels)
-
-        # Backwards
+        
+        # Backward
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
@@ -122,6 +123,7 @@ print(f"Learning took {seconds_to_hms(time.time() - start_time)}, [{time.time() 
 
 # 7. Test and evaluation
 print("\n7. Starting evaluation")
+model.eval()
 with torch.no_grad():
     test_loss = []
     n_samples = 0

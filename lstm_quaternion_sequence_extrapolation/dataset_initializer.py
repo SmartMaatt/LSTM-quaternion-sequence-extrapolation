@@ -44,7 +44,7 @@ class RotationDataset(Dataset):
             final_data.append(sequence)
         
         #return final_data
-        return torch.tensor(final_data, dtype=torch.float32)
+        return torch.tensor(final_data)
     
     def _prepare_labels_dataset(self, data, input_size):
         final_data = []
@@ -54,4 +54,4 @@ class RotationDataset(Dataset):
             final_data.append(sequence)
         
         #return final_data
-        return torch.tensor(final_data, dtype=torch.float32)
+        return torch.tensor(final_data)
