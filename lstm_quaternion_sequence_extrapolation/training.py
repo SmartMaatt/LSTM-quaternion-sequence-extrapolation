@@ -25,7 +25,7 @@ num_epochs = 3
 batch_size = 10
 learning_rate = 0.001
 
-model_type = ModelType.VectorizedQLSTM
+model_type = ModelType.QLSTM
 is_qal_loss = True
 
 show_evaluation = False
