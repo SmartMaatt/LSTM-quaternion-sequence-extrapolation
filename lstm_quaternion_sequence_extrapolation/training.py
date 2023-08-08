@@ -4,6 +4,7 @@ import torch
 import torch.nn as nn
 import numpy as np
 from torch.utils.data import DataLoader, random_split
+from torch.utils.tensorboard import SummaryWriter
 
 import recurrent_models as rm
 from dataset_initializer import RotationDataset
@@ -24,19 +25,42 @@ num_epochs = 3
 batch_size = 10
 learning_rate = 0.001
 
-model_type = ModelType.LSTM
+model_type = ModelType.VectorizedQLSTM
 is_qal_loss = True
 
 show_evaluation = False
 model_dir = rf"./models"
 
 
+# File name configuration
+# Configure file name
+model_name = ""
+if model_type == ModelType.LSTM:
+    model_name = "LSTM"
+elif model_type == ModelType.QLSTM:
+    model_name = "QLSTM"
+elif model_type == ModelType.VectorizedQLSTM:
+    model_name = "VectorizedQLSTM"
+
+loss_name = ""
+if is_qal_loss:
+    loss_name = "qal"
+else:
+    loss_name = "mse"
+
+model_path = rf"{model_dir}/{model_name}_{loss_name}_batch{batch_size}_epochs{num_epochs}.pth"
+print(f"Path: {model_path}")
+
+# Tensorboard
+writer = SummaryWriter(f"runs/{model_name}_{loss_name}_batch{batch_size}_epochs{num_epochs}")
+
+
 # 1. Creating dataset
 print("\n1. Creating dataset")
-training_path = r"./data/mockup/training_data (Medium).csv"
-labels_path = r"./data/mockup/labels_data (Medium).csv"
-# training_path = r"./data/mockup/large/training_data.csv"
-# labels_path = r"./data/mockup/large/labels_data.csv"
+# training_path = r"./data/mockup/training_data (Medium).csv"
+# labels_path = r"./data/mockup/labels_data (Medium).csv"
+training_path = r"./data/mockup/large/training_data.csv"
+labels_path = r"./data/mockup/large/labels_data.csv"
 dataset = RotationDataset(training_path, labels_path, input_size, sequence_length)
 
 
@@ -51,6 +75,8 @@ training_dataset, test_dataset = random_split(dataset, [training_size, test_size
 print("3. Generating DataLoaders")
 train_loader = DataLoader(dataset=training_dataset, batch_size=batch_size)
 test_loader = DataLoader(dataset=test_dataset, batch_size=batch_size)
+examples = iter(test_loader)
+example_data, example_targets = next(examples)
 
 
 # 4. Creating model
@@ -88,16 +114,20 @@ else:
     criterion = nn.MSELoss()
 
 print("Evaluation criterion: QALLoss function")
-criterion_eval = nn.MSELoss()
+criterion_eval = rm.QALLoss()
 
 print("Optimizer: Adam")
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 print(f"Learning rate: {learning_rate}")
 
+# Tensorboard
+writer.add_graph(model, example_data.to(device))
+
 
 # 6. Training loop
 print("\n6. Starting training loop")
 n_total_steps = len(train_loader)
+running_loss = 0.0
 start_time = time.time()
 
 model.train()
@@ -116,9 +146,15 @@ for epoch in range(num_epochs):
         loss.backward()
         optimizer.step()
 
+        running_loss += loss.item()
+
         if (i+1) % 100 == 0:
             print(f'epoch {epoch+1} / {num_epochs}, step {i+1} / {n_total_steps}, loss {loss.item():.7f}, time: {(time.time() - start_time):.2f}s')
-print(f"Learning took {seconds_to_hms(time.time() - start_time)}, [{time.time() - start_time}]")
+            # Tensorboard
+            writer.add_scalar('training loss', running_loss / 100, epoch * n_total_steps + i)
+            running_loss = 0.0
+
+print(f"Learning took {seconds_to_hms(time.time() - start_time)}, [{(time.time() - start_time):.2f}s]")
 
 
 # 7. Test and evaluation
@@ -154,24 +190,5 @@ with torch.no_grad():
 
 # 8. Saving model
 print("\n8. Saving model")
-
-# Configure file name
-model_name = ""
-if model_type == ModelType.LSTM:
-    model_name = "LSTM"
-elif model_type == ModelType.QLSTM:
-    model_name = "QLSTM"
-elif model_type == ModelType.VectorizedQLSTM:
-    model_name = "VectorizedQLSTM"
-
-loss_name = ""
-if is_qal_loss:
-    loss_name = "qal"
-else:
-    loss_name = "mse"
-
-model_path = rf"{model_dir}/{model_name}_{loss_name}_batch{batch_size}_epochs{num_epochs}.pth"
-print(f"Path: {model_path}")
-
 torch.save(model, model_path)
 print("Saving successed")
