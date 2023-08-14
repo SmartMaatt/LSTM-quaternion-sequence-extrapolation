@@ -73,6 +73,9 @@ def continue_training(
     elif type(model) == rm.VectorizedStackedQLSTM:
         print(f"Model: Vectorized QLSTM")
         model_name = "VectorizedQLSTM"
+    else:
+        print("Incorrect model type")
+        sys.exit()
 
     loss_name = ""
     if is_qal_loss:
@@ -200,7 +203,7 @@ if __name__ == "__main__":
     
     hidden_size = 128 
     num_classes = 4
-    num_epochs = 4 
+    num_epochs = 5 
     batch_size = 10 
     learning_rate = 0.001 
     previous_epochs = 3
@@ -209,92 +212,92 @@ if __name__ == "__main__":
     model_dir = rf"./models"
 
     # LSTM MSE
-    continue_training(
-        input_size = input_size,
-        sequence_length = sequence_length,
-        num_layers = num_layers,
+    # continue_training(
+    #     input_size = input_size,
+    #     sequence_length = sequence_length,
+    #     num_layers = num_layers,
 
-        hidden_size = hidden_size,
-        num_classes = num_classes,
-        num_epochs = num_epochs,
-        batch_size = batch_size,
-        learning_rate = learning_rate,
+    #     hidden_size = hidden_size,
+    #     num_classes = num_classes,
+    #     num_epochs = num_epochs,
+    #     batch_size = batch_size,
+    #     learning_rate = learning_rate,
 
-        previous_epochs = previous_epochs,
-        is_qal_loss = False,
-        show_evaluation = show_evaluation,
+    #     previous_epochs = previous_epochs,
+    #     is_qal_loss = False,
+    #     show_evaluation = show_evaluation,
 
-        model_dir = model_dir,
-        model_path = rf"./models/lstm_mse_batch10_epochs3.pth",
-        training_path = training_path,
-        labels_path = labels_path
-    )
+    #     model_dir = model_dir,
+    #     model_path = rf"./models/lstm_mse_batch10_epochs3.pth",
+    #     training_path = training_path,
+    #     labels_path = labels_path
+    # )
 
-    # LSTM QAL
-    continue_training(
-        input_size = input_size,
-        sequence_length = sequence_length,
-        num_layers = num_layers,
+    # # LSTM QAL
+    # continue_training(
+    #     input_size = input_size,
+    #     sequence_length = sequence_length,
+    #     num_layers = num_layers,
 
-        hidden_size = hidden_size,
-        num_classes = num_classes,
-        num_epochs = num_epochs,
-        batch_size = batch_size,
-        learning_rate = learning_rate,
+    #     hidden_size = hidden_size,
+    #     num_classes = num_classes,
+    #     num_epochs = num_epochs,
+    #     batch_size = batch_size,
+    #     learning_rate = learning_rate,
 
-        previous_epochs = previous_epochs,
-        is_qal_loss = True,
-        show_evaluation = show_evaluation,
+    #     previous_epochs = previous_epochs,
+    #     is_qal_loss = True,
+    #     show_evaluation = show_evaluation,
 
-        model_dir = model_dir,
-        model_path = rf"./models/lstm_qal_batch10_epochs3.pth",
-        training_path = training_path,
-        labels_path = labels_path
-    )
+    #     model_dir = model_dir,
+    #     model_path = rf"./models/lstm_qal_batch10_epochs3.pth",
+    #     training_path = training_path,
+    #     labels_path = labels_path
+    # )
 
-    # QLSTM MSE
-    continue_training(
-        input_size = input_size,
-        sequence_length = sequence_length,
-        num_layers = num_layers,
+    # # QLSTM MSE
+    # continue_training(
+    #     input_size = input_size,
+    #     sequence_length = sequence_length,
+    #     num_layers = num_layers,
 
-        hidden_size = hidden_size,
-        num_classes = num_classes,
-        num_epochs = num_epochs,
-        batch_size = batch_size,
-        learning_rate = learning_rate,
+    #     hidden_size = hidden_size,
+    #     num_classes = num_classes,
+    #     num_epochs = num_epochs,
+    #     batch_size = batch_size,
+    #     learning_rate = learning_rate,
 
-        previous_epochs = previous_epochs,
-        is_qal_loss = False,
-        show_evaluation = show_evaluation,
+    #     previous_epochs = previous_epochs,
+    #     is_qal_loss = False,
+    #     show_evaluation = show_evaluation,
 
-        model_dir = model_dir,
-        model_path = rf"./models/qlstm_mse_batch10_epochs3.pth",
-        training_path = training_path,
-        labels_path = labels_path
-    )
+    #     model_dir = model_dir,
+    #     model_path = rf"./models/qlstm_mse_batch10_epochs3.pth",
+    #     training_path = training_path,
+    #     labels_path = labels_path
+    # )
 
-    # QLSTM QAL
-    continue_training(
-        input_size = input_size,
-        sequence_length = sequence_length,
-        num_layers = num_layers,
+    # # QLSTM QAL
+    # continue_training(
+    #     input_size = input_size,
+    #     sequence_length = sequence_length,
+    #     num_layers = num_layers,
 
-        hidden_size = hidden_size,
-        num_classes = num_classes,
-        num_epochs = num_epochs,
-        batch_size = batch_size,
-        learning_rate = learning_rate,
+    #     hidden_size = hidden_size,
+    #     num_classes = num_classes,
+    #     num_epochs = num_epochs,
+    #     batch_size = batch_size,
+    #     learning_rate = learning_rate,
 
-        previous_epochs = previous_epochs,
-        is_qal_loss = True,
-        show_evaluation = show_evaluation,
+    #     previous_epochs = previous_epochs,
+    #     is_qal_loss = True,
+    #     show_evaluation = show_evaluation,
 
-        model_dir = model_dir,
-        model_path = rf"./models/qlstm_qal_batch10_epochs3.pth",
-        training_path = training_path,
-        labels_path = labels_path
-    )
+    #     model_dir = model_dir,
+    #     model_path = rf"./models/qlstm_qal_batch10_epochs3.pth",
+    #     training_path = training_path,
+    #     labels_path = labels_path
+    # )
 
     # Vectorized QLSTM MSE
     continue_training(

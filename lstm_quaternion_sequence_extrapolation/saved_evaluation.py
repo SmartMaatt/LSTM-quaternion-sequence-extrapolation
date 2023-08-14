@@ -151,7 +151,7 @@ if __name__ == "__main__":
         calculate_accuracy = calculate_accuracy,
         max_acc_round_point = max_acc_round_point,
 
-        model_path = rf"./models/lstm_mse_batch10_epochs3.pth",
+        model_path = rf"./models/lstm_mse_batch10_epochs5.pth",
         training_path = training_path,
         labels_path = labels_path
     )
@@ -167,7 +167,7 @@ if __name__ == "__main__":
         calculate_accuracy = calculate_accuracy,
         max_acc_round_point = max_acc_round_point,
 
-        model_path = rf"./models/lstm_qal_batch10_epochs3.pth",
+        model_path = rf"./models/lstm_qal_batch10_epochs5.pth",
         training_path = training_path,
         labels_path = labels_path
     )
@@ -183,7 +183,7 @@ if __name__ == "__main__":
         calculate_accuracy = calculate_accuracy,
         max_acc_round_point = max_acc_round_point,
 
-        model_path = rf"./models/qlstm_mse_batch10_epochs3.pth",
+        model_path = rf"./models/qlstm_mse_batch10_epochs5.pth",
         training_path = training_path,
         labels_path = labels_path
     )
@@ -199,7 +199,7 @@ if __name__ == "__main__":
         calculate_accuracy = calculate_accuracy,
         max_acc_round_point = max_acc_round_point,
 
-        model_path = rf"./models/qlstm_qal_batch10_epochs3.pth",
+        model_path = rf"./models/qlstm_qal_batch10_epochs5.pth",
         training_path = training_path,
         labels_path = labels_path
     )
@@ -215,7 +215,7 @@ if __name__ == "__main__":
         calculate_accuracy = calculate_accuracy,
         max_acc_round_point = max_acc_round_point,
 
-        model_path = rf"./models/VectorizedQLSTM_mse_batch10_epochs3.pth",
+        model_path = rf"./models/VectorizedQLSTM_mse_batch10_epochs5.pth",
         training_path = training_path,
         labels_path = labels_path
     )
@@ -231,7 +231,7 @@ if __name__ == "__main__":
         calculate_accuracy = calculate_accuracy,
         max_acc_round_point = max_acc_round_point,
 
-        model_path = rf"./models/VectorizedQLSTM_qal_batch10_epochs3.pth",
+        model_path = rf"./models/VectorizedQLSTM_qal_batch10_epochs5.pth",
         training_path = training_path,
         labels_path = labels_path
     )
