@@ -203,10 +203,10 @@ if __name__ == "__main__":
     
     hidden_size = 128 
     num_classes = 4
-    num_epochs = 5 
+    num_epochs = 10 
     batch_size = 10 
     learning_rate = 0.001 
-    previous_epochs = 3
+    previous_epochs = 5
 
     show_evaluation = False 
     model_dir = rf"./models"
@@ -228,7 +228,7 @@ if __name__ == "__main__":
     #     show_evaluation = show_evaluation,
 
     #     model_dir = model_dir,
-    #     model_path = rf"./models/lstm_mse_batch10_epochs3.pth",
+    #     model_path = rf"./models/lstm_mse_batch10_epochs5.pth",
     #     training_path = training_path,
     #     labels_path = labels_path
     # )
@@ -250,7 +250,7 @@ if __name__ == "__main__":
     #     show_evaluation = show_evaluation,
 
     #     model_dir = model_dir,
-    #     model_path = rf"./models/lstm_qal_batch10_epochs3.pth",
+    #     model_path = rf"./models/lstm_qal_batch10_epochs5.pth",
     #     training_path = training_path,
     #     labels_path = labels_path
     # )
@@ -272,7 +272,7 @@ if __name__ == "__main__":
     #     show_evaluation = show_evaluation,
 
     #     model_dir = model_dir,
-    #     model_path = rf"./models/qlstm_mse_batch10_epochs3.pth",
+    #     model_path = rf"./models/qlstm_mse_batch10_epochs5.pth",
     #     training_path = training_path,
     #     labels_path = labels_path
     # )
@@ -294,7 +294,7 @@ if __name__ == "__main__":
     #     show_evaluation = show_evaluation,
 
     #     model_dir = model_dir,
-    #     model_path = rf"./models/qlstm_qal_batch10_epochs3.pth",
+    #     model_path = rf"./models/qlstm_qal_batch10_epochs5.pth",
     #     training_path = training_path,
     #     labels_path = labels_path
     # )
@@ -316,29 +316,29 @@ if __name__ == "__main__":
         show_evaluation = show_evaluation,
 
         model_dir = model_dir,
-        model_path = rf"./models/VectorizedQLSTM_mse_batch10_epochs3.pth",
+        model_path = rf"./models/VectorizedQLSTM_mse_batch10_epochs5.pth",
         training_path = training_path,
         labels_path = labels_path
     )
 
-    # Vectorized QLSTM QAL
-    continue_training(
-        input_size = input_size,
-        sequence_length = sequence_length,
-        num_layers = num_layers,
+    # # Vectorized QLSTM QAL
+    # continue_training(
+    #     input_size = input_size,
+    #     sequence_length = sequence_length,
+    #     num_layers = num_layers,
 
-        hidden_size = hidden_size,
-        num_classes = num_classes,
-        num_epochs = num_epochs,
-        batch_size = batch_size,
-        learning_rate = learning_rate,
+    #     hidden_size = hidden_size,
+    #     num_classes = num_classes,
+    #     num_epochs = num_epochs,
+    #     batch_size = batch_size,
+    #     learning_rate = learning_rate,
 
-        previous_epochs = previous_epochs,
-        is_qal_loss = True,
-        show_evaluation = show_evaluation,
+    #     previous_epochs = previous_epochs,
+    #     is_qal_loss = True,
+    #     show_evaluation = show_evaluation,
 
-        model_dir = model_dir,
-        model_path = rf"./models/VectorizedQLSTM_qal_batch10_epochs3.pth",
-        training_path = training_path,
-        labels_path = labels_path
-    )
+    #     model_dir = model_dir,
+    #     model_path = rf"./models/VectorizedQLSTM_qal_batch10_epochs3.pth",
+    #     training_path = training_path,
+    #     labels_path = labels_path
+    # )
