@@ -1,4 +1,4 @@
-import sys
+import os
 import time
 import torch
 import torch.nn as nn
@@ -8,7 +8,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 import recurrent_models as rm
 from dataset_initializer import RotationDataset
-from utilities import seconds_to_hms
+from utilities import *
 
 
 def continue_training(
@@ -23,17 +23,46 @@ def continue_training(
         learning_rate = 0.001, 
         previous_epochs = 3, 
 
+        model_type = ModelType.LSTM,
         is_qal_loss = True, 
         show_evaluation = False, 
 
         model_dir = rf"./models",
-        model_path = "",
         training_path = r"./data/mockup/large/training_data.csv",
         labels_path = r"./data/mockup/large/labels_data.csv"
 ):
+    # Random seed configuration
+    torch.manual_seed(303)
+
     # Device configuration
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    print("\nContinue training procedure started")
+    print("\n>>> Continue training procedure started <<<")
+
+    # File name configuration
+    model_name = ""
+    if model_type == ModelType.LSTM:
+        model_name = "LSTM"
+    elif model_type == ModelType.QLSTM:
+        model_name = "QLSTM"
+    elif model_type == ModelType.VectorizedQLSTM:
+        model_name = "VectorizedQLSTM"
+
+    loss_name = ""
+    if is_qal_loss:
+        loss_name = "qal"
+    else:
+        loss_name = "mse"
+
+    # Check for files
+    if not os.path.exists(rf"{model_dir}/{generate_model_file_name(model_name, loss_name, previous_epochs)}.pth"):
+        print(f"Model file does not exist: {model_dir}/{generate_model_file_name(model_name, loss_name, previous_epochs)}.pth")
+        return
+
+    if not os.path.exists(rf"{model_dir}/{generate_model_file_name(model_name, loss_name, previous_epochs)}.opt"):
+        print(f"Optimizer file does not exist: {model_dir}/{generate_model_file_name(model_name, loss_name, previous_epochs)}.opt")
+        return
+    print(f"Training model: {model_dir}/{generate_model_file_name(model_name, loss_name, previous_epochs)}.pth")
+
     
     # 1. Creating dataset
     print("\n1. Creating dataset")
@@ -55,39 +84,26 @@ def continue_training(
 
     # 4. Creating model
     print("4. Creating model")
-    try:
-        model = torch.load(model_path).to(device)
-    except FileNotFoundError:
-        print(f"Model file {model_path} doesn't exist")
-        sys.exit()
-
-    # File name configuration
-    # Configure file name
-    model_name = ""
-    if type(model) == rm.LSTM:
+    if model_type == ModelType.LSTM:
         print(f"Model: LSTM")
-        model_name = "LSTM"
-    elif type(model) == rm.StackedQLSTM:
+        model = rm.LSTM(input_size, hidden_size, num_layers, num_classes, device).to(device)
+
+    elif model_type == ModelType.QLSTM:
         print(f"Model: QLSTM")
-        model_name = "QLSTM"
-    elif type(model) == rm.VectorizedStackedQLSTM:
+        model = rm.StackedQLSTM(input_size, hidden_size, num_layers, batch_first=True, device=device).to(device)
+
+    elif model_type == ModelType.VectorizedQLSTM:
         print(f"Model: Vectorized QLSTM")
-        model_name = "VectorizedQLSTM"
-    else:
-        print("Incorrect model type")
-        sys.exit()
+        model = rm.VectorizedStackedQLSTM(input_size, hidden_size, num_layers, batch_first=True, device=device).to(device)
 
-    loss_name = ""
-    if is_qal_loss:
-        loss_name = "qal"
     else:
-        loss_name = "mse"
+        print("Incorrect model type!")
+        return
 
-    model_path = rf"{model_dir}/{model_name}_{loss_name}_batch{batch_size}_epochs{num_epochs}.pth"
-    print(f"Path: {model_path}")
+    print(f"Path: {model_dir}/{generate_model_file_name(model_name, loss_name, num_epochs)}")
 
     # Tensorboard
-    writer = SummaryWriter(f"runs/{model_name}_{loss_name}_batch{batch_size}")
+    writer = SummaryWriter(f"runs/{model_name}_{loss_name}")
 
     print(f"Sequence length: {sequence_length}")
     print(f"Layers: {num_layers}")
@@ -113,9 +129,19 @@ def continue_training(
     print(f"Learning rate: {learning_rate}")
 
 
+    # 6. Load model and optimizer state data
+    print("\n6. Load model and optimizer state data")
+    try:
+        model.load_state_dict(torch.load(rf"{model_dir}/{generate_model_file_name(model_name, loss_name, previous_epochs)}.pth"))
+        optimizer.load_state_dict(torch.load(rf"{model_dir}/{generate_model_file_name(model_name, loss_name, previous_epochs)}.opt"))
+    except FileNotFoundError as ex:
+        print(f"File error: {ex}")
+        return
+    print("State data load completed")
 
-    # 6. Training loop
-    print("\n6. Starting training loop")
+
+    # 7. Training loop
+    print("\n7. Starting training loop")
     n_total_steps = len(train_loader)
     running_loss = 0.0
     start_time = time.time()
@@ -143,12 +169,18 @@ def continue_training(
                 # Tensorboard
                 writer.add_scalar('training loss', running_loss / 100, (epoch + previous_epochs) * n_total_steps + i)
                 running_loss = 0.0
+        
+        # Saving checkpoints
+        if (epoch + previous_epochs + 1) % 2 == 0:
+            torch.save(model.state_dict(), rf"{model_dir}/{generate_model_file_name(model_name, loss_name, epoch + previous_epochs + 1)}.pth")
+            torch.save(optimizer.state_dict(), rf"{model_dir}/{generate_model_file_name(model_name, loss_name, epoch + previous_epochs + 1)}.opt")
+            print(f"Checkpoint for {generate_model_file_name(model_name, loss_name, epoch+1)} done")
 
     print(f"Learning took {seconds_to_hms(time.time() - start_time)}, [{(time.time() - start_time):.2f}s]")
 
 
-    # 7. Test and evaluation
-    print("\n7. Starting evaluation")
+    # 8. Test and evaluation
+    print("\n8. Starting evaluation")
     model.eval()
     with torch.no_grad():
         test_loss = []
@@ -178,9 +210,10 @@ def continue_training(
         print(f'Loss mean: {loss_mean:.7f}, loss std: {loss_std:.7f}')
 
 
-    # 8. Saving model
-    print("\n8. Saving model")
-    torch.save(model, model_path)
+    # 9. Saving model
+    print("\n9. Saving model")
+    torch.save(model.state_dict(), rf"{model_dir}/{generate_model_file_name(model_name, loss_name, num_epochs)}.pth")
+    torch.save(optimizer.state_dict(), rf"{model_dir}/{generate_model_file_name(model_name, loss_name, num_epochs)}.opt")
     print("Saving successed")
 
 
@@ -203,142 +236,40 @@ if __name__ == "__main__":
     
     hidden_size = 128 
     num_classes = 4
-    num_epochs = 10 
+    num_epochs = 15
     batch_size = 10 
     learning_rate = 0.001 
-    previous_epochs = 5
+    previous_epochs = 10
 
     show_evaluation = False 
     model_dir = rf"./models"
+    
+    def execute_continue_training(model_type:ModelType, is_qal_loss:bool):
+        continue_training(
+            input_size = input_size,
+            sequence_length = sequence_length,
+            num_layers = num_layers,
 
-    # LSTM MSE
-    # continue_training(
-    #     input_size = input_size,
-    #     sequence_length = sequence_length,
-    #     num_layers = num_layers,
+            hidden_size = hidden_size,
+            num_classes = num_classes,
+            num_epochs = num_epochs,
+            batch_size = batch_size,
+            learning_rate = learning_rate,
+            previous_epochs = previous_epochs,
 
-    #     hidden_size = hidden_size,
-    #     num_classes = num_classes,
-    #     num_epochs = num_epochs,
-    #     batch_size = batch_size,
-    #     learning_rate = learning_rate,
+            model_type = model_type,
+            is_qal_loss = is_qal_loss,
+            show_evaluation = show_evaluation,
 
-    #     previous_epochs = previous_epochs,
-    #     is_qal_loss = False,
-    #     show_evaluation = show_evaluation,
+            model_dir = model_dir,
+            training_path = training_path,
+            labels_path = labels_path
+        )
 
-    #     model_dir = model_dir,
-    #     model_path = rf"./models/lstm_mse_batch10_epochs5.pth",
-    #     training_path = training_path,
-    #     labels_path = labels_path
-    # )
-
-    # # LSTM QAL
-    # continue_training(
-    #     input_size = input_size,
-    #     sequence_length = sequence_length,
-    #     num_layers = num_layers,
-
-    #     hidden_size = hidden_size,
-    #     num_classes = num_classes,
-    #     num_epochs = num_epochs,
-    #     batch_size = batch_size,
-    #     learning_rate = learning_rate,
-
-    #     previous_epochs = previous_epochs,
-    #     is_qal_loss = True,
-    #     show_evaluation = show_evaluation,
-
-    #     model_dir = model_dir,
-    #     model_path = rf"./models/lstm_qal_batch10_epochs5.pth",
-    #     training_path = training_path,
-    #     labels_path = labels_path
-    # )
-
-    # # QLSTM MSE
-    # continue_training(
-    #     input_size = input_size,
-    #     sequence_length = sequence_length,
-    #     num_layers = num_layers,
-
-    #     hidden_size = hidden_size,
-    #     num_classes = num_classes,
-    #     num_epochs = num_epochs,
-    #     batch_size = batch_size,
-    #     learning_rate = learning_rate,
-
-    #     previous_epochs = previous_epochs,
-    #     is_qal_loss = False,
-    #     show_evaluation = show_evaluation,
-
-    #     model_dir = model_dir,
-    #     model_path = rf"./models/qlstm_mse_batch10_epochs5.pth",
-    #     training_path = training_path,
-    #     labels_path = labels_path
-    # )
-
-    # # QLSTM QAL
-    # continue_training(
-    #     input_size = input_size,
-    #     sequence_length = sequence_length,
-    #     num_layers = num_layers,
-
-    #     hidden_size = hidden_size,
-    #     num_classes = num_classes,
-    #     num_epochs = num_epochs,
-    #     batch_size = batch_size,
-    #     learning_rate = learning_rate,
-
-    #     previous_epochs = previous_epochs,
-    #     is_qal_loss = True,
-    #     show_evaluation = show_evaluation,
-
-    #     model_dir = model_dir,
-    #     model_path = rf"./models/qlstm_qal_batch10_epochs5.pth",
-    #     training_path = training_path,
-    #     labels_path = labels_path
-    # )
-
-    # Vectorized QLSTM MSE
-    continue_training(
-        input_size = input_size,
-        sequence_length = sequence_length,
-        num_layers = num_layers,
-
-        hidden_size = hidden_size,
-        num_classes = num_classes,
-        num_epochs = num_epochs,
-        batch_size = batch_size,
-        learning_rate = learning_rate,
-
-        previous_epochs = previous_epochs,
-        is_qal_loss = False,
-        show_evaluation = show_evaluation,
-
-        model_dir = model_dir,
-        model_path = rf"./models/VectorizedQLSTM_mse_batch10_epochs5.pth",
-        training_path = training_path,
-        labels_path = labels_path
-    )
-
-    # # Vectorized QLSTM QAL
-    # continue_training(
-    #     input_size = input_size,
-    #     sequence_length = sequence_length,
-    #     num_layers = num_layers,
-
-    #     hidden_size = hidden_size,
-    #     num_classes = num_classes,
-    #     num_epochs = num_epochs,
-    #     batch_size = batch_size,
-    #     learning_rate = learning_rate,
-
-    #     previous_epochs = previous_epochs,
-    #     is_qal_loss = True,
-    #     show_evaluation = show_evaluation,
-
-    #     model_dir = model_dir,
-    #     model_path = rf"./models/VectorizedQLSTM_qal_batch10_epochs3.pth",
-    #     training_path = training_path,
-    #     labels_path = labels_path
-    # )
+    # Execute queued training
+    execute_continue_training(ModelType.LSTM, False)            # LSTM MSE
+    # execute_continue_training(ModelType.LSTM, True)             # LSTM QAL
+    # execute_continue_training(ModelType.QLSTM, False)           # QLSTM MSE
+    # execute_continue_training(ModelType.QLSTM, True)            # QLSTM QAL
+    # execute_continue_training(ModelType.VectorizedQLSTM, False)  # Vectorized QLSTM MSE
+    # execute_continue_training(ModelType.VectorizedQLSTM, True)   # Vectorized QLSTM MSE

@@ -11,6 +11,9 @@ def seconds_to_hms(seconds):
     seconds_left = seconds % 60
     return f"{int(hours)}h {int(minutes)}m {seconds_left:.2f}s"
 
+def generate_model_file_name(model_name, loss_name, num_epochs):
+       return f"{model_name}_{loss_name}_epochs{num_epochs}"
+
 class ModelType(Enum):
         LSTM = 0
         QLSTM = 1

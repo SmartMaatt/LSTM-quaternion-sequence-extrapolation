@@ -1,4 +1,4 @@
-import sys
+import os
 import torch
 import torch.nn as nn
 import numpy as np
@@ -6,25 +6,56 @@ from torch.utils.data import DataLoader, random_split
 
 import recurrent_models as rm
 from dataset_initializer import RotationDataset
+from utilities import *
 
 def saved_evaluation(
-        input_size = 4,          # Quaternion
-        sequence_length = 100,   # Frames
-        batch_size = 10,
+        input_size = 4,             # Quaternion
+        sequence_length = 100,      # Frames
+        num_layers = 2, 
 
+        hidden_size = 128, 
+        num_classes = 4, 
+        num_epochs = 4, 
+        batch_size = 10, 
+        trained_on_qal = True,
+
+        model_type = ModelType.LSTM,
         is_qal_loss = False,
         show_evaluation = False,
         calculate_accuracy = True,
         max_acc_round_point = 7,
 
-        model_path = "",
+        model_dir = rf"./models",
         training_path = r"./data/mockup/large/training_data.csv",
         labels_path = r"./data/mockup/large/labels_data.csv"
 ):
+    # Random seed configuration
+    torch.manual_seed(303)
 
     # Device configuration
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    print("Saved evaluation procedure started")
+    print("\n>>> Saved evaluation procedure started <<<")
+
+    # File name configuration
+    model_name = ""
+    if model_type == ModelType.LSTM:
+        model_name = "LSTM"
+    elif model_type == ModelType.QLSTM:
+        model_name = "QLSTM"
+    elif model_type == ModelType.VectorizedQLSTM:
+        model_name = "VectorizedQLSTM"
+
+    loss_name = ""
+    if trained_on_qal:
+        loss_name = "qal"
+    else:
+        loss_name = "mse"
+
+    # Check for files
+    if not os.path.exists(rf"{model_dir}/{generate_model_file_name(model_name, loss_name, num_epochs)}.pth"):
+        print(f"Model file does not exist: {model_dir}/{generate_model_file_name(model_name, loss_name, num_epochs)}.pth")
+        return
+    print(f"Evaluating model: {model_dir}/{generate_model_file_name(model_name, loss_name, num_epochs)}.pth")
 
 
     # 1. Creating dataset
@@ -46,13 +77,29 @@ def saved_evaluation(
 
 
     # 4. Creating model
-    print("4. Reading model")
+    print("4. Creating model")
+    if model_type == ModelType.LSTM:
+        print(f"Model: LSTM")
+        model = rm.LSTM(input_size, hidden_size, num_layers, num_classes, device).to(device)
+
+    elif model_type == ModelType.QLSTM:
+        print(f"Model: QLSTM")
+        model = rm.StackedQLSTM(input_size, hidden_size, num_layers, batch_first=True, device=device).to(device)
+
+    elif model_type == ModelType.VectorizedQLSTM:
+        print(f"Model: Vectorized QLSTM")
+        model = rm.VectorizedStackedQLSTM(input_size, hidden_size, num_layers, batch_first=True, device=device).to(device)
+
+    else:
+        print("Incorrect model type!")
+        return
+
     try:
-        model = torch.load(model_path).to(device)
-    except FileNotFoundError:
-        print(f"Model file {model_path} doesn't exist")
-        sys.exit()
-    print(f"Model type: {type(model)}")
+        model.load_state_dict(torch.load(rf"{model_dir}/{generate_model_file_name(model_name, loss_name, num_epochs)}.pth"))
+    except FileNotFoundError as ex:
+        print(f"File error: {ex}")
+        return
+    print("State data load completed")
 
 
     # 5. Criterion
@@ -131,107 +178,48 @@ if __name__ == "__main__":
     training_path = r"./data/mockup/large/training_data.csv"
     labels_path = r"./data/mockup/large/labels_data.csv"
 
-    input_size = 4          # Quaternion
-    sequence_length = 100   # Frames
+    input_size = 4             # Quaternion
+    sequence_length = 100      # Frames
+    num_layers = 2
+
+    hidden_size = 128
+    num_classes = 4
+    num_epochs = 10
     batch_size = 10
 
-    is_qal_loss = True
+    is_qal_loss = False
     show_evaluation = False
     calculate_accuracy = True
     max_acc_round_point = 7
+    model_dir = rf"./models"
 
-    # LSTM MSE
-    saved_evaluation(
-        input_size = input_size,
-        sequence_length = sequence_length,
-        batch_size = batch_size,
+    def execute_saved_evaluation(model_type : ModelType, trained_on_qal : bool):
+        saved_evaluation(
+            input_size = input_size,
+            sequence_length = sequence_length,
+            num_layers = num_layers, 
 
-        is_qal_loss = is_qal_loss,
-        show_evaluation = show_evaluation,
-        calculate_accuracy = calculate_accuracy,
-        max_acc_round_point = max_acc_round_point,
+            hidden_size = hidden_size, 
+            num_classes = num_classes, 
+            num_epochs = num_epochs, 
+            batch_size = batch_size,
+            trained_on_qal = trained_on_qal,
 
-        model_path = rf"./models/lstm_mse_batch10_epochs5.pth",
-        training_path = training_path,
-        labels_path = labels_path
-    )
+            model_type = model_type,
+            is_qal_loss = is_qal_loss,
+            show_evaluation = show_evaluation,
+            calculate_accuracy = calculate_accuracy,
+            max_acc_round_point = max_acc_round_point,
 
-    # LSTM QAL
-    saved_evaluation(
-        input_size = input_size,
-        sequence_length = sequence_length,
-        batch_size = batch_size,
+            model_dir = model_dir,
+            training_path = training_path,
+            labels_path = labels_path
+        )
 
-        is_qal_loss = is_qal_loss,
-        show_evaluation = show_evaluation,
-        calculate_accuracy = calculate_accuracy,
-        max_acc_round_point = max_acc_round_point,
-
-        model_path = rf"./models/lstm_qal_batch10_epochs5.pth",
-        training_path = training_path,
-        labels_path = labels_path
-    )
-
-    # QLSTM MSE
-    saved_evaluation(
-        input_size = input_size,
-        sequence_length = sequence_length,
-        batch_size = batch_size,
-
-        is_qal_loss = is_qal_loss,
-        show_evaluation = show_evaluation,
-        calculate_accuracy = calculate_accuracy,
-        max_acc_round_point = max_acc_round_point,
-
-        model_path = rf"./models/qlstm_mse_batch10_epochs5.pth",
-        training_path = training_path,
-        labels_path = labels_path
-    )
-
-    # QLSTM QAL
-    saved_evaluation(
-        input_size = input_size,
-        sequence_length = sequence_length,
-        batch_size = batch_size,
-
-        is_qal_loss = is_qal_loss,
-        show_evaluation = show_evaluation,
-        calculate_accuracy = calculate_accuracy,
-        max_acc_round_point = max_acc_round_point,
-
-        model_path = rf"./models/qlstm_qal_batch10_epochs5.pth",
-        training_path = training_path,
-        labels_path = labels_path
-    )
-
-    # Vectorized QLSTM MSE
-    saved_evaluation(
-        input_size = input_size,
-        sequence_length = sequence_length,
-        batch_size = batch_size,
-
-        is_qal_loss = is_qal_loss,
-        show_evaluation = show_evaluation,
-        calculate_accuracy = calculate_accuracy,
-        max_acc_round_point = max_acc_round_point,
-
-        model_path = rf"./models/VectorizedQLSTM_mse_batch10_epochs5.pth",
-        training_path = training_path,
-        labels_path = labels_path
-    )
-
-    # Vectorized QLSTM QAL
-    saved_evaluation(
-        input_size = input_size,
-        sequence_length = sequence_length,
-        batch_size = batch_size,
-
-        is_qal_loss = is_qal_loss,
-        show_evaluation = show_evaluation,
-        calculate_accuracy = calculate_accuracy,
-        max_acc_round_point = max_acc_round_point,
-
-        model_path = rf"./models/VectorizedQLSTM_qal_batch10_epochs5.pth",
-        training_path = training_path,
-        labels_path = labels_path
-    )
+    # Execute queued training
+    execute_saved_evaluation(ModelType.LSTM, False)        # LSTM MSE
+    execute_saved_evaluation(ModelType.LSTM, True)         # LSTM QAL
+    execute_saved_evaluation(ModelType.QLSTM, False)       # QLSTM MSE
+    execute_saved_evaluation(ModelType.QLSTM, True)        # QLSTM QAL
+    # execute_saved_evaluation(ModelType.VectorizedQLSTM, False)  # Vectorized QLSTM MSE
+    # execute_saved_evaluation(ModelType.VectorizedQLSTM, True)   # Vectorized QLSTM QAL
