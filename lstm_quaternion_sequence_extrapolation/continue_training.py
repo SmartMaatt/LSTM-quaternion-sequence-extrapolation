@@ -21,7 +21,8 @@ def continue_training(
         num_epochs = 4, 
         batch_size = 10, 
         learning_rate = 0.001, 
-        previous_epochs = 3, 
+        previous_epochs = 3,
+        checkpoint_interval = 2, 
 
         model_type = ModelType.LSTM,
         is_qal_loss = True, 
@@ -171,10 +172,10 @@ def continue_training(
                 running_loss = 0.0
         
         # Saving checkpoints
-        if (epoch + previous_epochs + 1) % 2 == 0:
+        if (epoch + previous_epochs + 1) % checkpoint_interval == 0:
             torch.save(model.state_dict(), rf"{model_dir}/{generate_model_file_name(model_name, loss_name, epoch + previous_epochs + 1)}.pth")
             torch.save(optimizer.state_dict(), rf"{model_dir}/{generate_model_file_name(model_name, loss_name, epoch + previous_epochs + 1)}.opt")
-            print(f"Checkpoint for {generate_model_file_name(model_name, loss_name, epoch+1)} done")
+            print(f"Checkpoint for {generate_model_file_name(model_name, loss_name, epoch + previous_epochs + 1)} done")
 
     print(f"Learning took {seconds_to_hms(time.time() - start_time)}, [{(time.time() - start_time):.2f}s]")
 
@@ -240,6 +241,7 @@ if __name__ == "__main__":
     batch_size = 10 
     learning_rate = 0.001 
     previous_epochs = 10
+    checkpoint_interval = 2
 
     show_evaluation = False 
     model_dir = rf"./models"
@@ -256,6 +258,7 @@ if __name__ == "__main__":
             batch_size = batch_size,
             learning_rate = learning_rate,
             previous_epochs = previous_epochs,
+            checkpoint_interval = checkpoint_interval,
 
             model_type = model_type,
             is_qal_loss = is_qal_loss,
@@ -267,9 +270,9 @@ if __name__ == "__main__":
         )
 
     # Execute queued training
-    execute_continue_training(ModelType.LSTM, False)            # LSTM MSE
+    # execute_continue_training(ModelType.LSTM, False)            # LSTM MSE
     # execute_continue_training(ModelType.LSTM, True)             # LSTM QAL
-    # execute_continue_training(ModelType.QLSTM, False)           # QLSTM MSE
+    execute_continue_training(ModelType.QLSTM, False)           # QLSTM MSE
     # execute_continue_training(ModelType.QLSTM, True)            # QLSTM QAL
     # execute_continue_training(ModelType.VectorizedQLSTM, False)  # Vectorized QLSTM MSE
     # execute_continue_training(ModelType.VectorizedQLSTM, True)   # Vectorized QLSTM MSE

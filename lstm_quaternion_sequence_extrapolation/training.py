@@ -19,7 +19,8 @@ def training(
         num_classes = 4, 
         num_epochs = 4, 
         batch_size = 10, 
-        learning_rate = 0.001, 
+        learning_rate = 0.001,
+        checkpoint_interval = 2, 
 
         model_type = ModelType.LSTM,
         is_qal_loss = True, 
@@ -153,7 +154,7 @@ def training(
                 writer.add_scalar('training loss', running_loss / 100, epoch * n_total_steps + i)
                 running_loss = 0.0
 
-        if (epoch+1) % 2 == 0:
+        if (epoch+1) % checkpoint_interval == 0:
             torch.save(model.state_dict(), rf"{model_dir}/{generate_model_file_name(model_name, loss_name, epoch+1)}.pth")
             torch.save(optimizer.state_dict(), rf"{model_dir}/{generate_model_file_name(model_name, loss_name, epoch+1)}.opt")
             print(f"Checkpoint for {generate_model_file_name(model_name, loss_name, epoch+1)} done")
@@ -213,7 +214,8 @@ if __name__ == "__main__":
     num_classes = 4
     num_epochs = 5 
     batch_size = 10 
-    learning_rate = 0.001 
+    learning_rate = 0.001
+    checkpoint_interval = 2 
 
     show_evaluation = False 
     model_dir = rf"./models"
@@ -229,6 +231,7 @@ if __name__ == "__main__":
             num_epochs = num_epochs,
             batch_size = batch_size,
             learning_rate = learning_rate,
+            checkpoint_interval = checkpoint_interval,
 
             model_type = model_type,
             is_qal_loss = is_qal_loss,
