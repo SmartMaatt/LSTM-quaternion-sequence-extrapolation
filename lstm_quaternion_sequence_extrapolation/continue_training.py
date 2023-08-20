@@ -241,7 +241,7 @@ if __name__ == "__main__":
     batch_size = 10 
     learning_rate = 0.001 
     previous_epochs = 10
-    checkpoint_interval = 2
+    checkpoint_interval = 1
 
     show_evaluation = False 
     model_dir = rf"./models"
@@ -270,9 +270,9 @@ if __name__ == "__main__":
         )
 
     # Execute queued training
-    # execute_continue_training(ModelType.LSTM, False)            # LSTM MSE
-    # execute_continue_training(ModelType.LSTM, True)             # LSTM QAL
-    execute_continue_training(ModelType.QLSTM, False)           # QLSTM MSE
+    execute_continue_training(ModelType.LSTM, False)            # LSTM MSE
+    execute_continue_training(ModelType.LSTM, True)             # LSTM QAL
+    # execute_continue_training(ModelType.QLSTM, False)           # QLSTM MSE
     # execute_continue_training(ModelType.QLSTM, True)            # QLSTM QAL
     # execute_continue_training(ModelType.VectorizedQLSTM, False)  # Vectorized QLSTM MSE
     # execute_continue_training(ModelType.VectorizedQLSTM, True)   # Vectorized QLSTM MSE
