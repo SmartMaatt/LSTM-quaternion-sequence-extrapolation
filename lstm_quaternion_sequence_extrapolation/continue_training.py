@@ -29,6 +29,7 @@ def continue_training(
         show_evaluation = False, 
 
         model_dir = rf"./models",
+        set_name = "hip",
         training_path = r"./data/mockup/large/training_data.csv",
         labels_path = r"./data/mockup/large/labels_data.csv"
 ):
@@ -55,14 +56,14 @@ def continue_training(
         loss_name = "mse"
 
     # Check for files
-    if not os.path.exists(rf"{model_dir}/{generate_model_file_name(model_name, loss_name, previous_epochs)}.pth"):
-        print(f"Model file does not exist: {model_dir}/{generate_model_file_name(model_name, loss_name, previous_epochs)}.pth")
+    if not os.path.exists(rf"{model_dir}/{generate_model_file_name(model_name, loss_name, set_name, previous_epochs)}.pth"):
+        print(f"Model file does not exist: {model_dir}/{generate_model_file_name(model_name, loss_name, set_name, previous_epochs)}.pth")
         return
 
-    if not os.path.exists(rf"{model_dir}/{generate_model_file_name(model_name, loss_name, previous_epochs)}.opt"):
-        print(f"Optimizer file does not exist: {model_dir}/{generate_model_file_name(model_name, loss_name, previous_epochs)}.opt")
+    if not os.path.exists(rf"{model_dir}/{generate_model_file_name(model_name, loss_name, set_name, previous_epochs)}.opt"):
+        print(f"Optimizer file does not exist: {model_dir}/{generate_model_file_name(model_name, loss_name, set_name, previous_epochs)}.opt")
         return
-    print(f"Training model: {model_dir}/{generate_model_file_name(model_name, loss_name, previous_epochs)}.pth")
+    print(f"Training model: {model_dir}/{generate_model_file_name(model_name, loss_name, set_name, previous_epochs)}.pth")
 
     
     # 1. Creating dataset
@@ -101,10 +102,10 @@ def continue_training(
         print("Incorrect model type!")
         return
 
-    print(f"Path: {model_dir}/{generate_model_file_name(model_name, loss_name, num_epochs)}")
+    print(f"Path: {model_dir}/{generate_model_file_name(model_name, loss_name, set_name, num_epochs)}")
 
     # Tensorboard
-    writer = SummaryWriter(f"runs/{model_name}_{loss_name}")
+    writer = SummaryWriter(f"runs/{model_name}_{loss_name}_{set_name}")
 
     print(f"Sequence length: {sequence_length}")
     print(f"Layers: {num_layers}")
@@ -133,8 +134,8 @@ def continue_training(
     # 6. Load model and optimizer state data
     print("\n6. Load model and optimizer state data")
     try:
-        model.load_state_dict(torch.load(rf"{model_dir}/{generate_model_file_name(model_name, loss_name, previous_epochs)}.pth"))
-        optimizer.load_state_dict(torch.load(rf"{model_dir}/{generate_model_file_name(model_name, loss_name, previous_epochs)}.opt"))
+        model.load_state_dict(torch.load(rf"{model_dir}/{generate_model_file_name(model_name, loss_name, set_name, previous_epochs)}.pth"))
+        optimizer.load_state_dict(torch.load(rf"{model_dir}/{generate_model_file_name(model_name, loss_name, set_name, previous_epochs)}.opt"))
     except FileNotFoundError as ex:
         print(f"File error: {ex}")
         return
@@ -173,9 +174,9 @@ def continue_training(
         
         # Saving checkpoints
         if (epoch + previous_epochs + 1) % checkpoint_interval == 0:
-            torch.save(model.state_dict(), rf"{model_dir}/{generate_model_file_name(model_name, loss_name, epoch + previous_epochs + 1)}.pth")
-            torch.save(optimizer.state_dict(), rf"{model_dir}/{generate_model_file_name(model_name, loss_name, epoch + previous_epochs + 1)}.opt")
-            print(f"Checkpoint for {generate_model_file_name(model_name, loss_name, epoch + previous_epochs + 1)} done")
+            torch.save(model.state_dict(), rf"{model_dir}/{generate_model_file_name(model_name, loss_name, set_name, epoch + previous_epochs + 1)}.pth")
+            torch.save(optimizer.state_dict(), rf"{model_dir}/{generate_model_file_name(model_name, loss_name, set_name, epoch + previous_epochs + 1)}.opt")
+            print(f"Checkpoint for {generate_model_file_name(model_name, loss_name, set_name, epoch + previous_epochs + 1)} done")
 
     print(f"Learning took {seconds_to_hms(time.time() - start_time)}, [{(time.time() - start_time):.2f}s]")
 
@@ -213,8 +214,8 @@ def continue_training(
 
     # 9. Saving model
     print("\n9. Saving model")
-    torch.save(model.state_dict(), rf"{model_dir}/{generate_model_file_name(model_name, loss_name, num_epochs)}.pth")
-    torch.save(optimizer.state_dict(), rf"{model_dir}/{generate_model_file_name(model_name, loss_name, num_epochs)}.opt")
+    torch.save(model.state_dict(), rf"{model_dir}/{generate_model_file_name(model_name, loss_name, set_name, num_epochs)}.pth")
+    torch.save(optimizer.state_dict(), rf"{model_dir}/{generate_model_file_name(model_name, loss_name, set_name, num_epochs)}.opt")
     print("Saving successed")
 
 
@@ -228,8 +229,10 @@ if __name__ == "__main__":
 
     # training_path = r"./data/mockup/training_data (Medium).csv"
     # labels_path = r"./data/mockup/labels_data (Medium).csv"
-    training_path = r"./data/mockup/large/training_data.csv"
-    labels_path = r"./data/mockup/large/labels_data.csv"
+    # training_path = r"./data/mockup/large/training_data_hip.csv"
+    # labels_path = r"./data/mockup/large/labels_data_hip.csv"
+    training_path = r"./data/mockup/large/training_data_foot.csv"
+    labels_path = r"./data/mockup/large/labels_data_foot.csv"
 
     input_size = 4             # Quaternion
     sequence_length = 100      # Frames
@@ -237,14 +240,15 @@ if __name__ == "__main__":
     
     hidden_size = 128 
     num_classes = 4
-    num_epochs = 15
+    num_epochs = 25
     batch_size = 10 
     learning_rate = 0.001 
-    previous_epochs = 10
+    previous_epochs = 20
     checkpoint_interval = 1
 
     show_evaluation = False 
     model_dir = rf"./models"
+    set_name = "foot"
     
     def execute_continue_training(model_type:ModelType, is_qal_loss:bool):
         continue_training(
@@ -265,6 +269,7 @@ if __name__ == "__main__":
             show_evaluation = show_evaluation,
 
             model_dir = model_dir,
+            set_name = set_name,
             training_path = training_path,
             labels_path = labels_path
         )
@@ -272,7 +277,7 @@ if __name__ == "__main__":
     # Execute queued training
     execute_continue_training(ModelType.LSTM, False)            # LSTM MSE
     execute_continue_training(ModelType.LSTM, True)             # LSTM QAL
-    # execute_continue_training(ModelType.QLSTM, False)           # QLSTM MSE
+    execute_continue_training(ModelType.QLSTM, False)           # QLSTM MSE
     # execute_continue_training(ModelType.QLSTM, True)            # QLSTM QAL
     # execute_continue_training(ModelType.VectorizedQLSTM, False)  # Vectorized QLSTM MSE
     # execute_continue_training(ModelType.VectorizedQLSTM, True)   # Vectorized QLSTM MSE

@@ -26,6 +26,7 @@ def saved_evaluation(
         max_acc_round_point = 7,
 
         model_dir = rf"./models",
+        set_name = "hip",
         training_path = r"./data/mockup/large/training_data.csv",
         labels_path = r"./data/mockup/large/labels_data.csv"
 ):
@@ -52,10 +53,10 @@ def saved_evaluation(
         loss_name = "mse"
 
     # Check for files
-    if not os.path.exists(rf"{model_dir}/{generate_model_file_name(model_name, loss_name, num_epochs)}.pth"):
-        print(f"Model file does not exist: {model_dir}/{generate_model_file_name(model_name, loss_name, num_epochs)}.pth")
+    if not os.path.exists(rf"{model_dir}/{generate_model_file_name(model_name, loss_name, set_name, num_epochs)}.pth"):
+        print(f"Model file does not exist: {model_dir}/{generate_model_file_name(model_name, loss_name, set_name, num_epochs)}.pth")
         return
-    print(f"Evaluating model: {model_dir}/{generate_model_file_name(model_name, loss_name, num_epochs)}.pth")
+    print(f"Evaluating model: {model_dir}/{generate_model_file_name(model_name, loss_name, set_name, num_epochs)}.pth")
 
 
     # 1. Creating dataset
@@ -95,7 +96,7 @@ def saved_evaluation(
         return
 
     try:
-        model.load_state_dict(torch.load(rf"{model_dir}/{generate_model_file_name(model_name, loss_name, num_epochs)}.pth"))
+        model.load_state_dict(torch.load(rf"{model_dir}/{generate_model_file_name(model_name, loss_name, set_name, num_epochs)}.pth"))
     except FileNotFoundError as ex:
         print(f"File error: {ex}")
         return
@@ -175,8 +176,10 @@ if __name__ == "__main__":
 
     # training_path = r"./data/mockup/training_data (Medium).csv"
     # labels_path = r"./data/mockup/labels_data (Medium).csv"
-    training_path = r"./data/mockup/large/training_data.csv"
-    labels_path = r"./data/mockup/large/labels_data.csv"
+    # training_path = r"./data/mockup/large/training_data_hip.csv"
+    # labels_path = r"./data/mockup/large/labels_data_hip.csv"
+    training_path = r"./data/mockup/large/training_data_foot.csv"
+    labels_path = r"./data/mockup/large/labels_data_foot.csv"
 
     input_size = 4             # Quaternion
     sequence_length = 100      # Frames
@@ -184,13 +187,15 @@ if __name__ == "__main__":
 
     hidden_size = 128
     num_classes = 4
-    num_epochs = 15
+    num_epochs = 25
     batch_size = 10
 
     is_qal_loss = False
     show_evaluation = False
     calculate_accuracy = True
     max_acc_round_point = 7
+
+    set_name = "foot"
     model_dir = rf"./models"
 
     def execute_saved_evaluation(model_type : ModelType, trained_on_qal : bool):
@@ -212,6 +217,7 @@ if __name__ == "__main__":
             max_acc_round_point = max_acc_round_point,
 
             model_dir = model_dir,
+            set_name = set_name,
             training_path = training_path,
             labels_path = labels_path
         )
@@ -222,7 +228,7 @@ if __name__ == "__main__":
     execute_saved_evaluation(ModelType.QLSTM, False)       # QLSTM MSE
     # execute_saved_evaluation(ModelType.QLSTM, True)        # QLSTM QAL
 
-    is_qal_loss = True
-    execute_saved_evaluation(ModelType.LSTM, False)        # LSTM MSE
-    execute_saved_evaluation(ModelType.LSTM, True)         # LSTM QAL
-    execute_saved_evaluation(ModelType.QLSTM, False)       # QLSTM MSE
+    # is_qal_loss = True
+    # execute_saved_evaluation(ModelType.LSTM, False)        # LSTM MSE
+    # execute_saved_evaluation(ModelType.LSTM, True)         # LSTM QAL
+    # execute_saved_evaluation(ModelType.QLSTM, False)       # QLSTM MSE

@@ -27,6 +27,7 @@ def training(
         show_evaluation = False, 
 
         model_dir = rf"./models",
+        set_name = "hip",
         training_path = r"./data/mockup/large/training_data.csv",
         labels_path = r"./data/mockup/large/labels_data.csv"
 ):
@@ -53,10 +54,10 @@ def training(
     else:
         loss_name = "mse"
 
-    print(f"Training model: {model_dir}/{generate_model_file_name(model_name, loss_name, num_epochs)}.pth")
+    print(f"Training model: {model_dir}/{generate_model_file_name(model_name, loss_name, set_name, num_epochs)}.pth")
 
     # Tensorboard
-    writer = SummaryWriter(f"runs/{model_name}_{loss_name}")
+    writer = SummaryWriter(f"runs/{model_name}_{loss_name}_{set_name}")
 
 
     # 1. Creating dataset
@@ -155,9 +156,9 @@ def training(
                 running_loss = 0.0
 
         if (epoch+1) % checkpoint_interval == 0:
-            torch.save(model.state_dict(), rf"{model_dir}/{generate_model_file_name(model_name, loss_name, epoch+1)}.pth")
-            torch.save(optimizer.state_dict(), rf"{model_dir}/{generate_model_file_name(model_name, loss_name, epoch+1)}.opt")
-            print(f"Checkpoint for {generate_model_file_name(model_name, loss_name, epoch+1)} done")
+            torch.save(model.state_dict(), rf"{model_dir}/{generate_model_file_name(model_name, loss_name, set_name, epoch+1)}.pth")
+            torch.save(optimizer.state_dict(), rf"{model_dir}/{generate_model_file_name(model_name, loss_name, set_name, epoch+1)}.opt")
+            print(f"Checkpoint for {generate_model_file_name(model_name, loss_name, set_name, epoch+1)} done")
 
     print(f"Learning took {seconds_to_hms(time.time() - start_time)}, [{(time.time() - start_time):.2f}s]")
 
@@ -195,16 +196,18 @@ def training(
 
     # 8. Saving model
     print("\n8. Saving model")
-    torch.save(model.state_dict(), rf"{model_dir}/{generate_model_file_name(model_name, loss_name, num_epochs)}.pth")
-    torch.save(optimizer.state_dict(), rf"{model_dir}/{generate_model_file_name(model_name, loss_name, num_epochs)}.opt")
+    torch.save(model.state_dict(), rf"{model_dir}/{generate_model_file_name(model_name, loss_name, set_name, num_epochs)}.pth")
+    torch.save(optimizer.state_dict(), rf"{model_dir}/{generate_model_file_name(model_name, loss_name, set_name, num_epochs)}.opt")
     print("Saving successed")
 
 
 if __name__ == "__main__":
     # training_path = r"./data/mockup/training_data (Medium).csv"
     # labels_path = r"./data/mockup/labels_data (Medium).csv"
-    training_path = r"./data/mockup/large/training_data.csv"
-    labels_path = r"./data/mockup/large/labels_data.csv"
+    # training_path = r"./data/mockup/large/training_data_hip.csv"
+    # labels_path = r"./data/mockup/large/labels_data_hip.csv"
+    training_path = r"./data/mockup/large/training_data_foot.csv"
+    labels_path = r"./data/mockup/large/labels_data_foot.csv"
 
     input_size = 4             # Quaternion
     sequence_length = 100      # Frames
@@ -219,6 +222,7 @@ if __name__ == "__main__":
 
     show_evaluation = False 
     model_dir = rf"./models"
+    set_name = "foot"
 
     def execute_training(is_qal_loss : bool, model_type : ModelType):
         training(
@@ -238,6 +242,7 @@ if __name__ == "__main__":
             show_evaluation = show_evaluation,
 
             model_dir = model_dir,
+            set_name = set_name,
             training_path = training_path,
             labels_path = labels_path
         )
