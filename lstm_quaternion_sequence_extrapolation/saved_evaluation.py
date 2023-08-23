@@ -187,7 +187,7 @@ if __name__ == "__main__":
 
     hidden_size = 128
     num_classes = 4
-    num_epochs = 5
+    num_epochs = 10
     batch_size = 10
 
     is_qal_loss = False
