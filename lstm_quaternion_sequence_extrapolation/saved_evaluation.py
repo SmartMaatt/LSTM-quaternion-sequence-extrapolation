@@ -187,7 +187,7 @@ if __name__ == "__main__":
 
     hidden_size = 128
     num_classes = 4
-    num_epochs = 25
+    num_epochs = 5
     batch_size = 10
 
     is_qal_loss = False
@@ -228,7 +228,7 @@ if __name__ == "__main__":
     execute_saved_evaluation(ModelType.QLSTM, False)       # QLSTM MSE
     # execute_saved_evaluation(ModelType.QLSTM, True)        # QLSTM QAL
 
-    # is_qal_loss = True
-    # execute_saved_evaluation(ModelType.LSTM, False)        # LSTM MSE
-    # execute_saved_evaluation(ModelType.LSTM, True)         # LSTM QAL
-    # execute_saved_evaluation(ModelType.QLSTM, False)       # QLSTM MSE
+    is_qal_loss = True
+    execute_saved_evaluation(ModelType.LSTM, False)        # LSTM MSE
+    execute_saved_evaluation(ModelType.LSTM, True)         # LSTM QAL
+    execute_saved_evaluation(ModelType.QLSTM, False)       # QLSTM MSE

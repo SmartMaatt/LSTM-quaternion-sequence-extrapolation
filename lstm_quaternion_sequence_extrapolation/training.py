@@ -250,7 +250,7 @@ if __name__ == "__main__":
     # Execute queued training
     # execute_training(False, ModelType.LSTM)             # LSTM MSE
     # execute_training(True, ModelType.LSTM)              # LSTM QAL
-    # execute_training(False, ModelType.QLSTM)            # QLSTM MSE
-    execute_training(True, ModelType.QLSTM)             # QLSTM QAL
+    execute_training(False, ModelType.QLSTM)            # QLSTM MSE
+    # execute_training(True, ModelType.QLSTM)             # QLSTM QAL
     # execute_training(False, ModelType.VectorizedQLSTM)  # Vectorized QLSTM MSE
     # execute_training(True, ModelType.VectorizedQLSTM)   # Vectorized QLSTM QAL 

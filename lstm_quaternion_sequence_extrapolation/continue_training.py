@@ -240,10 +240,10 @@ if __name__ == "__main__":
     
     hidden_size = 128 
     num_classes = 4
-    num_epochs = 25
+    num_epochs = 10
     batch_size = 10 
     learning_rate = 0.001 
-    previous_epochs = 20
+    previous_epochs = 7
     checkpoint_interval = 1
 
     show_evaluation = False 
