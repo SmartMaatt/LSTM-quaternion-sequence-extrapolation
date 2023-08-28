@@ -206,8 +206,10 @@ if __name__ == "__main__":
     # labels_path = r"./data/mockup/labels_data (Medium).csv"
     # training_path = r"./data/mockup/large/training_data_hip.csv"
     # labels_path = r"./data/mockup/large/labels_data_hip.csv"
-    training_path = r"./data/mockup/large/training_data_foot.csv"
-    labels_path = r"./data/mockup/large/labels_data_foot.csv"
+    # training_path = r"./data/mockup/large/training_data_foot.csv"
+    # labels_path = r"./data/mockup/large/labels_data_foot.csv"
+    training_path = r"./data/mockup/large/training_data_neck.csv"
+    labels_path = r"./data/mockup/large/labels_data_neck.csv"
 
     input_size = 4             # Quaternion
     sequence_length = 100      # Frames
@@ -218,11 +220,11 @@ if __name__ == "__main__":
     num_epochs = 5 
     batch_size = 10 
     learning_rate = 0.001
-    checkpoint_interval = 2 
+    checkpoint_interval = 1 
 
     show_evaluation = False 
     model_dir = rf"./models"
-    set_name = "foot"
+    set_name = "neck"
 
     def execute_training(is_qal_loss : bool, model_type : ModelType):
         training(
@@ -248,8 +250,8 @@ if __name__ == "__main__":
         )
 
     # Execute queued training
-    # execute_training(False, ModelType.LSTM)             # LSTM MSE
-    # execute_training(True, ModelType.LSTM)              # LSTM QAL
+    execute_training(False, ModelType.LSTM)             # LSTM MSE
+    execute_training(True, ModelType.LSTM)              # LSTM QAL
     execute_training(False, ModelType.QLSTM)            # QLSTM MSE
     # execute_training(True, ModelType.QLSTM)             # QLSTM QAL
     # execute_training(False, ModelType.VectorizedQLSTM)  # Vectorized QLSTM MSE
