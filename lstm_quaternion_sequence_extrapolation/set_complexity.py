@@ -5,10 +5,10 @@ file_path = r"./data/mockup/source_sets.csv"
 
 def calculate_set_complexity(data:torch.tensor, label:str):
     # Coefficient of variation
-    mean = torch.mean(data)
-    std = torch.std(data)
-    cv = std / mean
-    print(f'[{label}] Coefficient of variation: {cv.item()}')
+    mean = torch.mean(data + 1)
+    std = torch.std(data + 1)
+    cv = (std / mean) * 100
+    print(f'[{label}] Coefficient of variation: {cv.item()}%')
 
     # Interquartile range
     iqr = torch.quantile(data, 0.75) - torch.quantile(data, 0.25)
