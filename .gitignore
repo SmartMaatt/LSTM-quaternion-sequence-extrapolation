@@ -152,4 +152,4 @@ cython_debug/
 #.idea/
 
 # Large data sets
-data/mockup/large
+data/mockup/large/*csv
