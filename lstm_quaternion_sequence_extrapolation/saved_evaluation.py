@@ -167,19 +167,12 @@ def saved_evaluation(
 
 
 if __name__ == "__main__":
-    # model_path = rf"./models/lstm_mse_batch10_epochs3.pth"
-    # model_path = rf"./models/lstm_qal_batch10_epochs3.pth"
-    # model_path = rf"./models/qlstm_mse_batch10_epochs3.pth"
-    # model_path = rf"./models/qlstm_qal_batch10_epochs3.pth"
-    # model_path = rf"./models/VectorizedQLSTM_mse_batch10_epochs3.pth"
-    # model_path = rf"./models/VectorizedQLSTM_qal_batch10_epochs3.pth"
-
-    # training_path = r"./data/mockup/training_data (Medium).csv"
-    # labels_path = r"./data/mockup/labels_data (Medium).csv"
     # training_path = r"./data/mockup/large/training_data_hip.csv"
     # labels_path = r"./data/mockup/large/labels_data_hip.csv"
-    training_path = r"./data/mockup/large/training_data_foot.csv"
-    labels_path = r"./data/mockup/large/labels_data_foot.csv"
+    # training_path = r"./data/mockup/large/training_data_foot.csv"
+    # labels_path = r"./data/mockup/large/labels_data_foot.csv"
+    training_path = r"./data/mockup/large/training_data_neck.csv"
+    labels_path = r"./data/mockup/large/labels_data_neck.csv"
 
     input_size = 4             # Quaternion
     sequence_length = 100      # Frames
@@ -187,7 +180,7 @@ if __name__ == "__main__":
 
     hidden_size = 128
     num_classes = 4
-    num_epochs = 10
+    num_epochs = 25
     batch_size = 10
 
     is_qal_loss = False
@@ -195,7 +188,7 @@ if __name__ == "__main__":
     calculate_accuracy = True
     max_acc_round_point = 7
 
-    set_name = "foot"
+    set_name = "neck"
     model_dir = rf"./models"
 
     def execute_saved_evaluation(model_type : ModelType, trained_on_qal : bool):
@@ -222,13 +215,7 @@ if __name__ == "__main__":
             labels_path = labels_path
         )
 
-    # Execute queued training
     execute_saved_evaluation(ModelType.LSTM, False)        # LSTM MSE
     execute_saved_evaluation(ModelType.LSTM, True)         # LSTM QAL
     execute_saved_evaluation(ModelType.QLSTM, False)       # QLSTM MSE
-    # execute_saved_evaluation(ModelType.QLSTM, True)        # QLSTM QAL
-
-    is_qal_loss = True
-    execute_saved_evaluation(ModelType.LSTM, False)        # LSTM MSE
-    execute_saved_evaluation(ModelType.LSTM, True)         # LSTM QAL
-    execute_saved_evaluation(ModelType.QLSTM, False)       # QLSTM MSE
+    execute_saved_evaluation(ModelType.QLSTM, True)        # QLSTM QAL

@@ -220,19 +220,12 @@ def continue_training(
 
 
 if __name__ == "__main__":
-    # model_path = rf"./models/lstm_mse_batch10_epochs3.pth"
-    # model_path = rf"./models/lstm_qal_batch10_epochs3.pth"
-    # model_path = rf"./models/qlstm_mse_batch10_epochs3.pth"
-    # model_path = rf"./models/qlstm_qal_batch10_epochs3.pth"
-    # model_path = rf"./models/VectorizedQLSTM_mse_batch10_epochs3.pth"
-    # model_path = rf"./models/VectorizedQLSTM_qal_batch10_epochs3.pth"
-
-    # training_path = r"./data/mockup/training_data (Medium).csv"
-    # labels_path = r"./data/mockup/labels_data (Medium).csv"
     # training_path = r"./data/mockup/large/training_data_hip.csv"
     # labels_path = r"./data/mockup/large/labels_data_hip.csv"
-    training_path = r"./data/mockup/large/training_data_foot.csv"
-    labels_path = r"./data/mockup/large/labels_data_foot.csv"
+    # training_path = r"./data/mockup/large/training_data_foot.csv"
+    # labels_path = r"./data/mockup/large/labels_data_foot.csv"
+    training_path = r"./data/mockup/large/training_data_neck.csv"
+    labels_path = r"./data/mockup/large/labels_data_neck.csv"
 
     input_size = 4             # Quaternion
     sequence_length = 100      # Frames
@@ -240,15 +233,15 @@ if __name__ == "__main__":
     
     hidden_size = 128 
     num_classes = 4
-    num_epochs = 10
+    num_epochs = 25
     batch_size = 10 
     learning_rate = 0.001 
-    previous_epochs = 8
+    previous_epochs = 16
     checkpoint_interval = 1
 
     show_evaluation = False 
     model_dir = rf"./models"
-    set_name = "foot"
+    set_name = "neck"
     
     def execute_continue_training(model_type:ModelType, is_qal_loss:bool):
         continue_training(
@@ -275,9 +268,9 @@ if __name__ == "__main__":
         )
 
     # Execute queued training
-    # execute_continue_training(ModelType.LSTM, False)            # LSTM MSE
-    # execute_continue_training(ModelType.LSTM, True)             # LSTM QAL
+    execute_continue_training(ModelType.LSTM, False)            # LSTM MSE
+    execute_continue_training(ModelType.LSTM, True)             # LSTM QAL
     execute_continue_training(ModelType.QLSTM, False)           # QLSTM MSE
-    # execute_continue_training(ModelType.QLSTM, True)            # QLSTM QAL
+    execute_continue_training(ModelType.QLSTM, True)            # QLSTM QAL
     # execute_continue_training(ModelType.VectorizedQLSTM, False)  # Vectorized QLSTM MSE
     # execute_continue_training(ModelType.VectorizedQLSTM, True)   # Vectorized QLSTM MSE

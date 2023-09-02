@@ -202,8 +202,6 @@ def training(
 
 
 if __name__ == "__main__":
-    # training_path = r"./data/mockup/training_data (Medium).csv"
-    # labels_path = r"./data/mockup/labels_data (Medium).csv"
     # training_path = r"./data/mockup/large/training_data_hip.csv"
     # labels_path = r"./data/mockup/large/labels_data_hip.csv"
     # training_path = r"./data/mockup/large/training_data_foot.csv"
@@ -253,6 +251,6 @@ if __name__ == "__main__":
     execute_training(False, ModelType.LSTM)             # LSTM MSE
     execute_training(True, ModelType.LSTM)              # LSTM QAL
     execute_training(False, ModelType.QLSTM)            # QLSTM MSE
-    # execute_training(True, ModelType.QLSTM)             # QLSTM QAL
+    execute_training(True, ModelType.QLSTM)             # QLSTM QAL
     # execute_training(False, ModelType.VectorizedQLSTM)  # Vectorized QLSTM MSE
     # execute_training(True, ModelType.VectorizedQLSTM)   # Vectorized QLSTM QAL 
