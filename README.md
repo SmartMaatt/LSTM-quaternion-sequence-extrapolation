@@ -26,7 +26,7 @@ The purpose of this paper is to verify the hypothesis that neural networks are c
 - **Quaternion Data Handling**: Techniques for processing and manipulating quaternion data within neural networks.
 
 ## Screenshots
-![Extrapolated skeleton](https://smartmatt.pl/github/qlstm/extrapolated-skeleton.png)
+![Extrapolated skeleton](https://smartmatt.pl/github/qlstm/extrapolated-skeleton-zoom.png)
 *Animation presentation of an extrapolated skeleton from a motion capture recording in Mokka software.*
 
 ## Installation
